@@ -29,7 +29,13 @@ public class Language {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        } else {
+            resultLanguage = language;
         }
         return resultLanguage;
+    }
+
+    public static void clearAllLanguage() {
+        languageEngine.clearAllLanguage();
     }
 }
