@@ -35,7 +35,7 @@ public class Language {
         return resultLanguage;
     }
 
-    public static void clearAllLanguage() {
-        languageEngine.clearAllLanguage();
+    public static void resetAllLanguage() {
+        languageEngine.resetAllLanguage();
     }
 }

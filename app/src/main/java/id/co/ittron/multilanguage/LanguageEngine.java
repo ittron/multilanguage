@@ -110,16 +110,19 @@ public class LanguageEngine {
         }
     }
 
-    public void clearAllLanguage() {
+    public void resetAllLanguage() {
         JSONArray listAvailableLanguage = this.getListAvailableLanguage();
         for (int i=0;i<listAvailableLanguage.length();i++) {
             try {
                 File languangeFile = new File(languageBuilder.getContext().getFilesDir()+"/"+listAvailableLanguage.getString(i)+".json");
-                languangeFile.delete();
+                if(languangeFile.exists()) {
+                    languangeFile.delete();
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+        resultDownloadFile = this.downloadFileLanguage();
     }
 
     private String getMainLanguage() {
