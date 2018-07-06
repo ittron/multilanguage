@@ -25,7 +25,11 @@ public class Language {
 
         if(languageJSONObject!=null) {
             try {
-                resultLanguage = languageJSONObject.getString(language);
+                if(languageJSONObject.has(language)) {
+                    resultLanguage = languageJSONObject.getString(language);
+                } else {
+                    resultLanguage = language;
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
