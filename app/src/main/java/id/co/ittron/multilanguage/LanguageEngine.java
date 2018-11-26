@@ -14,13 +14,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class LanguageEngine {
 
@@ -30,8 +27,7 @@ public class LanguageEngine {
     Boolean resultDownloadFile;
     Boolean isFinishDownload;
 
-    ArrayList<DownloadFileLanguageAsyncTask> listDownloadFileLanguageAsyncTask;
-    DownloadFileLanguageAsyncTask downloadFileLanguageAsyncTask;
+    ArrayList<AsyncTask> listDownloadFileLanguageAsyncTask;
 
     int totalDownloadedLanguage;
 
@@ -214,13 +210,59 @@ public class LanguageEngine {
 
                 File languageFile = new File(languageBuilder.getContext().getFilesDir()+"/"+listLanguageJSON.getString(i)+".json");
                 if(!languageFile.exists()) {
-                    downloadFileLanguageAsyncTask = new DownloadFileLanguageAsyncTask(listLanguageJSON.getString(i));
-                    downloadFileLanguageAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    final String languageDownload = listLanguageJSON.getString(i);
+
+                    AsyncTask downloadFileLanguageAsyncTask = new AsyncTask() {
+                        @Override
+                        protected Object doInBackground(Object[] objects) {
+
+
+                            StringBuilder sb = new StringBuilder();
+                            try {
+                                URL url = new URL(downloadURL+"/"+languageDownload);
+                                BufferedReader in;
+                                in = new BufferedReader(
+                                        new InputStreamReader(
+                                                url.openStream()));
+
+                                String inputLine;
+                                while ((inputLine = in.readLine()) != null)
+                                    sb.append(inputLine);
+
+                                in.close();
+
+                                String responseString = sb.toString();
+
+                                if(responseString.length()>0) {
+                                    FileOutputStream outputStream = languageBuilder.getContext().openFileOutput(languageDownload + ".json", Context.MODE_PRIVATE);
+
+                                    outputStream.write(responseString.getBytes());
+
+                                    outputStream.close();
+                                } else {
+                                    Log.e("Language Libraries", "No Language Found");
+                                    totalDownloadedLanguage -=1;
+                                }
+
+                            } catch (MalformedURLException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            return null;
+                        }
+                    };
 
                     listDownloadFileLanguageAsyncTask.add(downloadFileLanguageAsyncTask);
+
                 } else {
                     totalDownloadedLanguage -=1;
                 }
+            }
+
+            for(int i=0; i<listDownloadFileLanguageAsyncTask.size();i++) {
+                listDownloadFileLanguageAsyncTask.get(i).execute();
             }
 
             if(totalDownloadedLanguage==0) {
@@ -228,68 +270,25 @@ public class LanguageEngine {
             }
 
             while(!isFinishDownload) {
-
                 for(int i=0; i<listDownloadFileLanguageAsyncTask.size();i++) {
-                    if(listDownloadFileLanguageAsyncTask.get(i).getStatus() == AsyncTask.Status.FINISHED) {
+                    File languageFile = new File(languageBuilder.getContext().getFilesDir()+"/"+listLanguageJSON.getString(i)+".json");
+                    if(languageFile.exists()) {
+
+                        Log.i("LanguageLibraries", "Language "+listLanguageJSON.getString(i)+" exists");
                         totalDownloadedLanguage -=1;
                     }
                 }
 
-                if(totalDownloadedLanguage == 0) {
+                if(totalDownloadedLanguage <= 0) {
                     isFinishDownload = true;
                 }
+
+                Log.i("LanguageLibraries", "Total Download Language "+totalDownloadedLanguage);
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         return isFinishDownload;
-    }
-
-
-    class DownloadFileLanguageAsyncTask extends AsyncTask<String, Void, String> {
-
-        String languageDownload;
-        public DownloadFileLanguageAsyncTask(String languageDownload) {
-            this.languageDownload = languageDownload;
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            Log.i("LanguageLibraries", "Downloading File Language "+languageDownload);
-
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder().url(downloadURL+"/"+languageDownload)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            Response response = null;
-
-            try {
-
-                response = client.newCall(request).execute();
-                InputStream in = response.body().byteStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                String result, line = reader.readLine();
-                result = line;
-                while((line = reader.readLine()) != null) {
-                    result += line;
-                }
-
-                if(result.length()>0) {
-                    FileOutputStream outputStream = languageBuilder.getContext().openFileOutput(languageDownload + ".json", Context.MODE_PRIVATE);
-                    outputStream.write(result.getBytes());
-                    outputStream.close();
-                } else {
-                    Log.e("Language Libraries", "No Language Found");
-                }
-                response.body().close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return "Executed";
-        }
     }
 }
