@@ -215,7 +215,7 @@ public class LanguageEngine {
                 File languageFile = new File(languageBuilder.getContext().getFilesDir()+"/"+listLanguageJSON.getString(i)+".json");
                 if(!languageFile.exists()) {
                     downloadFileLanguageAsyncTask = new DownloadFileLanguageAsyncTask(listLanguageJSON.getString(i));
-                    downloadFileLanguageAsyncTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+                    downloadFileLanguageAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
                     listDownloadFileLanguageAsyncTask.add(downloadFileLanguageAsyncTask);
                 } else {
@@ -228,6 +228,12 @@ public class LanguageEngine {
             }
 
             while(!isFinishDownload) {
+
+                for(int i=0; i<listDownloadFileLanguageAsyncTask.size();i++) {
+                    if(listDownloadFileLanguageAsyncTask.get(i).getStatus() == AsyncTask.Status.FINISHED) {
+                        totalDownloadedLanguage -=1;
+                    }
+                }
 
                 if(totalDownloadedLanguage == 0) {
                     isFinishDownload = true;
@@ -278,8 +284,6 @@ public class LanguageEngine {
                     Log.e("Language Libraries", "No Language Found");
                 }
                 response.body().close();
-
-                totalDownloadedLanguage -=1;
 
             } catch (IOException e) {
                 e.printStackTrace();
