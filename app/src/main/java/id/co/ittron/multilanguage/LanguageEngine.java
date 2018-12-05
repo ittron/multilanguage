@@ -1,6 +1,5 @@
 package id.co.ittron.multilanguage;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -47,7 +46,10 @@ public class LanguageEngine {
 
             try {
                 File mainLanguageFile = new File(languageBuilder.getContext().getFilesDir() + "/" + "language.dat");
+
                 if(!mainLanguageFile.exists()) {
+
+
                     Log.w("LanguageLibraries", "Main language not found, automatically using first language on list");
 
                     JSONArray listLanguageJSON = this.getListAvailableLanguage();
@@ -56,7 +58,9 @@ public class LanguageEngine {
 
                 language = this.getMainLanguage();
 
-                FileInputStream inputStream = languageBuilder.getContext().openFileInput(language + ".json");
+                File languageFile = new File(languageBuilder.getContext().getFilesDir() + "/lang_" +language + ".json");
+
+                FileInputStream inputStream = new FileInputStream(languageFile);
                 InputStreamReader isr = new InputStreamReader(inputStream);
                 BufferedReader bufferedReader = new BufferedReader(isr);
                 StringBuilder sb = new StringBuilder();
@@ -84,15 +88,21 @@ public class LanguageEngine {
 
     public void setMainLanguage(String language) {
 
+        Log.e("LanguageLibraries", "Set Main Language "+language);
+
         if(languageBuilder != null) {
 
-            File languageFile = new File(languageBuilder.getContext().getFilesDir() + "/" + language + ".json");
+            File languageFile = new File(languageBuilder.getContext().getFilesDir() + "/lang_" + language + ".json");
+
             if (!languageFile.exists()) {
-                Log.e("Language Libraries", "Language Not Found, Have you added selected language to LanguageBuilder?");
+
+                Log.e("LanguageLibraries", "Language Not Found, Have you added selected language to LanguageBuilder?");
             } else {
                 FileOutputStream outputStream = null;
+
+                File mainLanguage = new File(languageBuilder.getContext().getFilesDir() + "/" +"language.dat");
                 try {
-                    outputStream = languageBuilder.getContext().openFileOutput("language.dat", Context.MODE_PRIVATE);
+                    outputStream = new FileOutputStream(mainLanguage);
                     outputStream.write(language.getBytes());
                     outputStream.close();
                 } catch (FileNotFoundException e) {
@@ -110,7 +120,7 @@ public class LanguageEngine {
         JSONArray listAvailableLanguage = this.getListAvailableLanguage();
         for (int i=0;i<listAvailableLanguage.length();i++) {
             try {
-                File languangeFile = new File(languageBuilder.getContext().getFilesDir()+"/"+listAvailableLanguage.getString(i)+".json");
+                File languangeFile = new File(languageBuilder.getContext().getFilesDir()+"/lang_"+listAvailableLanguage.getString(i)+".json");
                 if(languangeFile.exists()) {
                     languangeFile.delete();
                 }
@@ -124,8 +134,10 @@ public class LanguageEngine {
     private String getMainLanguage() {
         String language = null;
 
+        File mainLanguage = new File(languageBuilder.getContext().getFilesDir() + "/" +"language.dat");
+
         try {
-            FileInputStream inputStream = languageBuilder.getContext().openFileInput("language.dat");
+            FileInputStream inputStream = new FileInputStream(mainLanguage);
             InputStreamReader isr = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(isr);
             StringBuilder sb = new StringBuilder();
@@ -146,8 +158,10 @@ public class LanguageEngine {
     }
 
     private void getDownloadUrlLanguage() {
+
+        File downloadLanguageFile = new File(languageBuilder.getContext().getFilesDir() + "/" +"downloadLanguage.dat");
         try {
-            FileInputStream inputStream = languageBuilder.getContext().openFileInput("downloadLanguage.dat");
+            FileInputStream inputStream = new FileInputStream(downloadLanguageFile);
             InputStreamReader isr = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(isr);
             StringBuilder sb = new StringBuilder();
@@ -169,8 +183,9 @@ public class LanguageEngine {
         JSONArray listLanguageJSON = null;
 
         FileInputStream inputStream = null;
+        File listLanguageFile = new File(languageBuilder.getContext().getFilesDir() + "/" +"listLanguage.dat");
         try {
-            inputStream = languageBuilder.getContext().openFileInput("listLanguage.dat");
+            inputStream = new FileInputStream(listLanguageFile);
             InputStreamReader isr = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(isr);
             StringBuilder sb = new StringBuilder();
@@ -208,7 +223,9 @@ public class LanguageEngine {
 
             for(int i=0;i<listLanguageJSON.length();i++) {
 
-                File languageFile = new File(languageBuilder.getContext().getFilesDir()+"/"+listLanguageJSON.getString(i)+".json");
+                Log.e("LanguageLibraries","Download Language "+listLanguageJSON.getString(i));
+
+                File languageFile = new File(languageBuilder.getContext().getFilesDir()+"/lang_"+listLanguageJSON.getString(i)+".json");
                 if(!languageFile.exists()) {
                     final String languageDownload = listLanguageJSON.getString(i);
 
@@ -234,14 +251,15 @@ public class LanguageEngine {
                                 String responseString = sb.toString();
 
                                 if(responseString.length()>0) {
-                                    FileOutputStream outputStream = languageBuilder.getContext().openFileOutput(languageDownload + ".json", Context.MODE_PRIVATE);
+                                    File languageDownloadFile = new File(languageBuilder.getContext().getFilesDir() + "/lang_" +languageDownload + ".json");
+
+                                    FileOutputStream outputStream = new FileOutputStream(languageDownloadFile, false);
 
                                     outputStream.write(responseString.getBytes());
 
                                     outputStream.close();
                                 } else {
                                     Log.e("Language Libraries", "No Language Found");
-                                    totalDownloadedLanguage -=1;
                                 }
 
                             } catch (MalformedURLException e) {
@@ -253,11 +271,8 @@ public class LanguageEngine {
                             return null;
                         }
                     };
-
                     listDownloadFileLanguageAsyncTask.add(downloadFileLanguageAsyncTask);
 
-                } else {
-                    totalDownloadedLanguage -=1;
                 }
             }
 
@@ -270,11 +285,9 @@ public class LanguageEngine {
             }
 
             while(!isFinishDownload) {
-                for(int i=0; i<listDownloadFileLanguageAsyncTask.size();i++) {
-                    File languageFile = new File(languageBuilder.getContext().getFilesDir()+"/"+listLanguageJSON.getString(i)+".json");
+                for(int i=0; i<listLanguageJSON.length();i++) {
+                    File languageFile = new File(languageBuilder.getContext().getFilesDir() + "/lang_" +listLanguageJSON.getString(i)+".json");
                     if(languageFile.exists()) {
-
-                        Log.i("LanguageLibraries", "Language "+listLanguageJSON.getString(i)+" exists");
                         totalDownloadedLanguage -=1;
                     }
                 }
