@@ -39,6 +39,10 @@ public class Language {
         return resultLanguage;
     }
 
+    public static void setTimeOutWaitingDownload(int timeOut) {
+        languageEngine.setTimeOutWaitingDownload(timeOut);
+    }
+
     public static void resetAllLanguage() {
         languageEngine.resetAllLanguage();
     }

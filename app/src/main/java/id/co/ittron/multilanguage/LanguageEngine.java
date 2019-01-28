@@ -34,6 +34,7 @@ public class LanguageEngine {
     ArrayList<AsyncTask> listDownloadFileLanguageAsyncTask;
 
     int totalDownloadedLanguage;
+    int timeOut = 1000;
 
     DownloadFileLanguageAsyncTask downloadFileLanguageAsyncTask;
 
@@ -93,34 +94,46 @@ public class LanguageEngine {
         return languageJSONObject;
     }
 
+    public void setTimeOutWaitingDownload(int timeOut) {
+        this.timeOut = timeOut;
+    }
+
     public void setMainLanguage(String language) {
+        try {
+            Thread.sleep(timeOut);
 
-        Log.e("LanguageLibraries", "Set Main Language "+language);
+            Log.d("LanguageLibraries", "Set Main Language "+language);
 
-        if(languageBuilder != null) {
+            if(languageBuilder != null) {
 
-            File languageFile = new File(languageBuilder.getContext().getFilesDir() + "/lang_" + language + ".json");
+                File languageFile = new File(languageBuilder.getContext().getFilesDir() + "/lang_" + language + ".json");
 
-            if (!languageFile.exists()) {
+                if (!languageFile.exists()) {
 
-                Log.e("LanguageLibraries", "Language Not Found, Have you added selected language to LanguageBuilder?");
-            } else {
-                FileOutputStream outputStream = null;
+                    Log.d("LanguageLibraries", "Language Not Found, Have you added selected language to LanguageBuilder?");
+                } else {
+                    FileOutputStream outputStream = null;
 
-                File mainLanguage = new File(languageBuilder.getContext().getFilesDir() + "/" +"language.dat");
-                try {
-                    outputStream = new FileOutputStream(mainLanguage);
-                    outputStream.write(language.getBytes());
-                    outputStream.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    File mainLanguage = new File(languageBuilder.getContext().getFilesDir() + "/" +"language.dat");
+                    try {
+                        outputStream = new FileOutputStream(mainLanguage);
+                        outputStream.write(language.getBytes());
+                        outputStream.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
+            } else {
+                Log.d("LanguageLibraries", "Language Libraries is not initialized yet.");
             }
-        } else {
-            Log.e("LanguageLibraries", "Language Libraries is not initialized yet.");
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+
     }
 
     public void resetAllLanguage() {
