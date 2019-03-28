@@ -19,7 +19,7 @@ allprojects {
 2. Add this line to your app gradle
 ```
 dependencies {
-    implementation 'com.github.elluno91:multilanguage:0.1'
+    implementation 'com.github.ittron:multilanguage:0.1'
 }
 ```
 
